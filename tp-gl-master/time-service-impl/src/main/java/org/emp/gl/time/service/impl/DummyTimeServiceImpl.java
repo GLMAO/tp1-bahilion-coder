@@ -5,164 +5,98 @@
  */
 package org.emp.gl.time.service.impl;
 
+import java.beans.PropertyChangeSupport;
 import java.time.LocalTime;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import org.emp.gl.timer.service.TimerChangeListener;
 import org.emp.gl.timer.service.TimerService;
 
-/**
- *
- * @author tina
- */
-public class DummyTimeServiceImpl
-        implements TimerService {
-
+public class DummyTimeServiceImpl implements TimerService {
+    
     int dixiemeDeSeconde;
     int minutes;
     int secondes;
     int heures;
-    List<TimerChangeListener> listeners = new LinkedList<>();
-
-    /**
-     * Constructeur du DummyTimeServiceImpl: ici, 
-     * nous nous avons utilisé un objet Timer, qui permet de
-     * réaliser des tics à chaque N millisecondes
-     */
+    
+    // Utiliser PropertyChangeSupport au lieu de List
+    private PropertyChangeSupport support = new PropertyChangeSupport(this);
+    
     public DummyTimeServiceImpl() {
         setTimeValues();
-        // initialize schedular
         Timer timer = new Timer();
         TimerTask task = new TimerTask() {
-             @Override
+            @Override
             public void run() {
                 timeChanged();
             }
         };
         timer.scheduleAtFixedRate(task, 100, 100);
     }
-
+    
+    @Override
+    public void addTimeChangeListener(TimerChangeListener pl) {
+        support.addPropertyChangeListener(pl);
+    }
+    
+    @Override
+    public void removeTimeChangeListener(TimerChangeListener pl) {
+        support.removePropertyChangeListener(pl);
+    }
+    
     private void setTimeValues() {
         LocalTime localTime = LocalTime.now();
-
         setSecondes(localTime.getSecond());
         setMinutes(localTime.getMinute());
         setHeures(localTime.getHour());
         setDixiemeDeSeconde(localTime.getNano() / 100000000);
     }
-
-   
-
-
-    @Override
-    public void addTimeChangeListener(TimerChangeListener pl) {
-        // TODO
-        listeners.add(pl) ;
-    }
-
-    @Override
-    public void removeTimeChangeListener(TimerChangeListener pl) {
-        // TODO
-        listeners.remove(pl) ;
-    }
-
+    
     private void timeChanged() {
         setTimeValues();
     }
-
+    
     public void setDixiemeDeSeconde(int newDixiemeDeSeconde) {
-        if (dixiemeDeSeconde == newDixiemeDeSeconde)
-            return;
-
+        if (dixiemeDeSeconde == newDixiemeDeSeconde) return;
         int oldValue = dixiemeDeSeconde;
         dixiemeDeSeconde = newDixiemeDeSeconde;
-
-        // informer les listeners !
-        dixiemeDeSecondesChanged(oldValue, dixiemeDeSeconde);
+        support.firePropertyChange(TimerChangeListener.DIXEME_DE_SECONDE_PROP, 
+            oldValue, dixiemeDeSeconde);
     }
-
-    private void dixiemeDeSecondesChanged(int oldValue, int newValue) {
-       for (TimerChangeListener l : listeners) {
-           l.propertyChange(TimerChangeListener.DIXEME_DE_SECONDE_PROP,
-                   oldValue, dixiemeDeSeconde);
-       }
-    }
-
-
+    
     public void setSecondes(int newSecondes) {
-        if (secondes == newSecondes)
-            return;
-
+        if (secondes == newSecondes) return;
         int oldValue = secondes;
         secondes = newSecondes;
-
-        secondesChanged(oldValue, secondes);
+        support.firePropertyChange(TimerChangeListener.SECONDE_PROP, 
+            oldValue, secondes);
     }
-
-    private void secondesChanged(int oldValue, int secondes) {
-
-       for (TimerChangeListener l : listeners) {
-           l.propertyChange(TimerChangeListener.SECONDE_PROP,
-                   oldValue, secondes);
-       }
-    }
-
-
+    
     public void setMinutes(int newMinutes) {
-        if (minutes == newMinutes)
-            return;
-
+        if (minutes == newMinutes) return;
         int oldValue = minutes;
         minutes = newMinutes;
-
-        minutesChanged (oldValue, minutes) ;
+        support.firePropertyChange(TimerChangeListener.MINUTE_PROP, 
+            oldValue, minutes);
     }
-
-    private void minutesChanged(int oldValue, int minutes) {
-       for (TimerChangeListener l : listeners) {
-           l.propertyChange(TimerChangeListener.MINUTE_PROP,
-                   oldValue, secondes);
-       }
-    }
-
+    
     public void setHeures(int newHeures) {
-        if (heures == newHeures)
-            return;
-
+        if (heures == newHeures) return;
         int oldValue = heures;
         heures = newHeures;
-
-        heuresChanged (oldValue, heures) ;
+        support.firePropertyChange(TimerChangeListener.HEURE_PROP, 
+            oldValue, heures);
     }
-
-    private void heuresChanged(int oldValue, int heures) {
-       for (TimerChangeListener l : listeners) {
-           l.propertyChange(TimerChangeListener.HEURE_PROP,
-                   oldValue, secondes);
-       }
-    }
-
-
+    
     @Override
-    public int getDixiemeDeSeconde() {
-        return dixiemeDeSeconde;
-    }
-
+    public int getDixiemeDeSeconde() { return dixiemeDeSeconde; }
+    
     @Override
-    public int getHeures() {
-        return heures;
-    }
-
+    public int getHeures() { return heures; }
+    
     @Override
-    public int getMinutes() {
-        return minutes;
-    }
-
+    public int getMinutes() { return minutes; }
+    
     @Override
-    public int getSecondes() {
-        return secondes;
-    }
+    public int getSecondes() { return secondes; }
 }
